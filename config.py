@@ -15,7 +15,7 @@ class Config:
 
     # Groq
     GROQ_API_KEY: str = os.environ.get("GROQ_API_KEY", "")
-    GROQ_LLM_MODEL: str = os.environ.get("GROQ_LLM_MODEL", "llama-3.3-70b-versatile")
+    GROQ_LLM_MODEL: str = os.environ.get("GROQ_LLM_MODEL", "openai/gpt-oss-120b")
     GROQ_WHISPER_MODEL: str = os.environ.get("GROQ_WHISPER_MODEL", "whisper-large-v3-turbo")
 
     # Storage

@@ -21,6 +21,41 @@ def _get_groq_client():
     return Groq(api_key=Config.GROQ_API_KEY)
 
 
+FALLBACK_MODELS = [
+    "openai/gpt-oss-120b",
+    "qwen/qwen3.8-27b",
+    "openai/gpt-oss-20b",
+]
+
+
+def _chat_completion_with_fallback(client, messages, temperature=0.7, max_tokens=800):
+    """
+    Execute chat completion with automatic fallback to supported models
+    if the primary configured model is unavailable or rate-limited.
+    """
+    models_to_try = [Config.GROQ_LLM_MODEL]
+    for fb in FALLBACK_MODELS:
+        if fb not in models_to_try:
+            models_to_try.append(fb)
+
+    last_error = None
+    for model_name in models_to_try:
+        try:
+            return client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+        except Exception as exc:
+            err_str = str(exc)
+            logger.warning("Groq model %s attempt failed: %s", model_name, err_str)
+            last_error = exc
+            if "api_key" in err_str.lower() or "authentication" in err_str.lower():
+                raise
+    raise last_error
+
+
 def _safe_json_parse(text: str) -> Optional[dict]:
     """
     Robustly extract and parse a JSON object from LLM output.
@@ -139,8 +174,8 @@ Respond ONLY with this JSON (no prose outside the JSON):
 }}"""
 
     client = _get_groq_client()
-    response = client.chat.completions.create(
-        model=Config.GROQ_LLM_MODEL,
+    response = _chat_completion_with_fallback(
+        client=client,
         messages=[
             {"role": "system", "content": SYSTEM_EXAMINER},
             {"role": "user", "content": prompt},
@@ -253,8 +288,8 @@ Respond ONLY with this JSON (no prose outside JSON):
 }}"""
 
     client = _get_groq_client()
-    response = client.chat.completions.create(
-        model=Config.GROQ_LLM_MODEL,
+    response = _chat_completion_with_fallback(
+        client=client,
         messages=[
             {"role": "system", "content": SYSTEM_EXAMINER},
             {"role": "user", "content": prompt},
@@ -335,8 +370,8 @@ Produce a detailed, actionable report as JSON:
 
     try:
         client = _get_groq_client()
-        response = client.chat.completions.create(
-            model=Config.GROQ_LLM_MODEL,
+        response = _chat_completion_with_fallback(
+            client=client,
             messages=[
                 {"role": "system", "content": "You are an expert academic examiner writing a formal performance report."},
                 {"role": "user", "content": prompt},

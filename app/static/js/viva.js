@@ -112,15 +112,24 @@ async function fetchNextQuestion() {
     const res = await fetch(`/api/sessions/${SESSION_ID}/question`);
     const data = await res.json();
 
+    if (!res.ok) {
+      throw new Error(data.error || "Failed to load question.");
+    }
+
     if (data.exam_complete) {
       showExamComplete();
       return;
+    }
+
+    if (!data.question) {
+      throw new Error(data.error || "No question returned from server.");
     }
 
     currentQuestion = data.question;
     renderQuestion(currentQuestion);
   } catch (err) {
     toast("Failed to load question: " + err.message, "error");
+    questionText.innerHTML = `<div style="color:var(--error);padding:0.75rem 0;">⚠️ ${escapeHtml(err.message)}</div><button class="btn btn-secondary" onclick="fetchNextQuestion()" style="margin-top:0.75rem">🔄 Retry Question</button>`;
   }
 }
 
