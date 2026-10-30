@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Viva Examination – AI Viva Simulator</title>
+  <link rel="stylesheet" href="/static/css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="/" class="nav-back">← Dashboard</a>
+      <span class="nav-sep">|</span>
+      <span class="nav-title">Viva Examination</span>
+    </div>
+    <div class="nav-links">
+      <span class="badge badge-info" id="sessionInfo">Loading…</span>
+      <span class="score-display" id="scoreDisplay">Score: —</span>
+    </div>
+  </nav>
+
+  <main class="viva-container">
+
+    <!-- Left: Question + Answer Panel -->
+    <section class="question-panel card">
+
+      <!-- Progress -->
+      <div class="exam-progress">
+        <div class="progress-meta">
+          <span id="progressLabel">Question 0 / 0</span>
+          <span id="difficultyBadge" class="badge badge-medium">Medium</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="examProgressFill"></div>
+        </div>
+      </div>
+
+      <!-- Question display -->
+      <div class="question-block" id="questionBlock">
+        <div class="question-topic" id="questionTopic"></div>
+        <div class="question-text" id="questionText">
+          <div class="skeleton-text"></div>
+          <div class="skeleton-text short"></div>
+        </div>
+
+        <!-- TTS controls -->
+        <div class="tts-controls" id="ttsControls" style="display:none">
+          <button class="btn-icon-sm" id="speakQuestionBtn" title="Read question aloud">🔊</button>
+          <button class="btn-icon-sm" id="muteBtn" title="Mute speech">🔇</button>
+          <span class="tts-status" id="ttsStatus"></span>
+        </div>
+      </div>
+
+      <!-- Answer section -->
+      <div class="answer-section" id="answerSection">
+
+        <!-- Voice recording UI -->
+        <div class="voice-ui" id="voiceUI" style="display:none">
+          <div class="mic-area">
+            <button class="mic-btn" id="micBtn" title="Start recording">
+              <span class="mic-icon">🎤</span>
+            </button>
+            <div class="recording-status" id="recordingStatus"></div>
+          </div>
+          <div class="transcription-area" id="transcriptionArea" style="display:none">
+            <label class="form-label">Transcription (edit if needed)</label>
+            <textarea id="transcriptionText" class="form-textarea" rows="3" placeholder="Your speech will appear here…"></textarea>
+          </div>
+        </div>
+
+        <!-- Text answer area -->
+        <div class="text-answer-area">
+          <label class="form-label" for="answerTextarea">Your Answer</label>
+          <textarea
+            id="answerTextarea"
+            class="form-textarea answer-textarea"
+            rows="6"
+            placeholder="Type your answer here… Be as detailed as possible. Explain your reasoning, not just the conclusion."
+          ></textarea>
+          <div class="answer-meta">
+            <span class="char-count" id="charCount">0 characters</span>
+          </div>
+        </div>
+
+        <div class="answer-actions">
+          <button class="btn btn-ghost" id="skipBtn">Skip Question</button>
+          <button class="btn btn-primary" id="submitBtn" disabled>
+            <span class="btn-text">Submit Answer</span>
+            <span class="btn-spinner" style="display:none">⏳ Evaluating…</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Feedback Panel (shown after submission) -->
+      <div class="feedback-panel" id="feedbackPanel" style="display:none">
+        <div class="feedback-header">
+          <span class="feedback-score-badge" id="feedbackScoreBadge">0/100</span>
+          <span class="correctness-badge" id="correctnessBadge">—</span>
+        </div>
+
+        <div class="feedback-tabs">
+          <button class="tab-btn active" data-tab="correction">📚 Explanation</button>
+          <button class="tab-btn" data-tab="strengths">✅ Strengths</button>
+          <button class="tab-btn" data-tab="answer">💡 Model Answer</button>
+          <button class="tab-btn" data-tab="evidence">🔍 Evidence</button>
+        </div>
+
+        <div class="tab-content active" id="tab-correction">
+          <div class="feedback-section">
+            <h4>What You Got Right</h4>
+            <ul id="understoodList" class="feedback-list success-list"></ul>
+          </div>
+          <div class="feedback-section" id="misconceptionsSection">
+            <h4>Misconceptions / Missing Concepts</h4>
+            <ul id="misconceptionsList" class="feedback-list error-list"></ul>
+          </div>
+          <div class="feedback-section">
+            <h4>Correct Reasoning</h4>
+            <div class="feedback-text" id="correctReasoning"></div>
+          </div>
+          <div class="feedback-section" id="detailedSection">
+            <h4>Detailed Step-by-Step Explanation</h4>
+            <div class="feedback-text highlight-block" id="detailedExplanation"></div>
+          </div>
+          <div class="feedback-section">
+            <h4>Example / Analogy</h4>
+            <div class="feedback-text code-style" id="exampleAnalogy"></div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-strengths">
+          <div class="feedback-section">
+            <h4>Your Strengths</h4>
+            <ul id="strengthsList" class="feedback-list success-list"></ul>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-answer">
+          <div class="feedback-section">
+            <h4>Improved Model Answer</h4>
+            <div class="feedback-text model-answer" id="modelAnswer"></div>
+          </div>
+          <div class="feedback-section">
+            <h4>Follow-up Question</h4>
+            <div class="follow-up-box" id="followUpBox">
+              <span class="follow-up-diff" id="followUpDiff"></span>
+              <div class="follow-up-text" id="followUpQuestion"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="tab-evidence">
+          <div class="feedback-section">
+            <h4>Project Document Evidence</h4>
+            <ul id="evidenceList" class="feedback-list evidence-list"></ul>
+          </div>
+        </div>
+
+        <div class="feedback-actions">
+          <button class="btn btn-primary" id="nextQuestionBtn">
+            Next Question →
+          </button>
+          <button class="btn btn-ghost" id="finishExamBtn" style="display:none">
+            Finish Exam &amp; Get Report
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: Session Sidebar -->
+    <aside class="session-sidebar">
+      <div class="card sidebar-card">
+        <h3 class="sidebar-title">📊 Session Progress</h3>
+        <div class="score-ring">
+          <svg viewBox="0 0 80 80" class="ring-svg">
+            <circle cx="40" cy="40" r="32" class="ring-bg" />
+            <circle cx="40" cy="40" r="32" class="ring-fill" id="scoreRing" />
+          </svg>
+          <div class="ring-label">
+            <div class="ring-score" id="ringScore">—</div>
+            <div class="ring-sub">avg score</div>
+          </div>
+        </div>
+        <div class="stat-row">
+          <span>Questions</span>
+          <span id="statQuestions">0/0</span>
+        </div>
+        <div class="stat-row">
+          <span>Correct</span>
+          <span id="statCorrect">0</span>
+        </div>
+        <div class="stat-row">
+          <span>Partial</span>
+          <span id="statPartial">0</span>
+        </div>
+        <div class="stat-row">
+          <span>Incorrect</span>
+          <span id="statIncorrect">0</span>
+        </div>
+      </div>
+
+      <div class="card sidebar-card">
+        <h3 class="sidebar-title">📜 Question History</h3>
+        <div class="history-list" id="historyList">
+          <div class="empty-state-sm">No questions yet</div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script>
+    window.SESSION_ID = {{ session_id }};
+  </script>
+  <script src="/static/js/viva.js"></script>
+</body>
+</html>

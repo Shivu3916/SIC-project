@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Viva Simulator</title>
+  <link rel="stylesheet" href="/static/css/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <span class="nav-icon">🎓</span>
+      <span class="nav-title">AI Viva Simulator</span>
+    </div>
+    <div class="nav-links">
+      <span id="apiStatusBadge" class="badge badge-checking">Checking API…</span>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <main class="main-container">
+    <section class="hero">
+      <h1 class="hero-title">
+        Ace Your <span class="gradient-text">Viva Voce</span>
+      </h1>
+      <p class="hero-subtitle">
+        Upload your project documentation and face a rigorous AI examiner.<br/>
+        Get real-time feedback, detailed explanations, and a full performance report.
+      </p>
+    </section>
+
+    <!-- Upload Panel -->
+    <section class="upload-section card" id="uploadSection">
+      <h2 class="section-title">📂 Upload Your Project</h2>
+
+      <div class="upload-area" id="dropZone">
+        <div class="upload-icon">📄</div>
+        <p class="upload-hint">Drag & drop your document here</p>
+        <p class="upload-subhint">PDF, DOCX, TXT, or Markdown · Max 50MB</p>
+        <label class="btn btn-secondary upload-btn-label">
+          Browse File
+          <input type="file" id="fileInput" accept=".pdf,.docx,.txt,.md" hidden />
+        </label>
+      </div>
+
+      <div class="upload-form" id="uploadForm" style="display:none">
+        <div class="file-preview" id="filePreview">
+          <span class="file-icon">📄</span>
+          <div class="file-info">
+            <span class="file-name" id="fileName"></span>
+            <span class="file-size" id="fileSize"></span>
+          </div>
+          <button class="btn-icon" id="clearFileBtn" title="Remove file">✕</button>
+        </div>
+
+        <div class="form-group">
+          <label for="projectTitle">Project Title</label>
+          <input type="text" id="projectTitle" class="form-input" placeholder="e.g. Smart Library Management System" maxlength="200" />
+        </div>
+
+        <div class="config-grid">
+          <div class="form-group">
+            <label for="difficultySelect">Difficulty</label>
+            <select id="difficultySelect" class="form-input">
+              <option value="easy">Easy – Recall &amp; Basics</option>
+              <option value="medium" selected>Medium – Apply &amp; Analyse</option>
+              <option value="hard">Hard – Design &amp; Evaluate</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="questionCount">Number of Questions</label>
+            <select id="questionCount" class="form-input">
+              <option value="5">5 Questions</option>
+              <option value="10" selected>10 Questions</option>
+              <option value="15">15 Questions</option>
+              <option value="20">20 Questions</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mode</label>
+            <div class="toggle-group">
+              <button class="toggle-btn active" id="textModeBtn" data-mode="text">
+                💬 Text
+              </button>
+              <button class="toggle-btn" id="voiceModeBtn" data-mode="voice">
+                🎤 Voice
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" id="uploadBtn">
+          <span class="btn-text">Process &amp; Start Viva</span>
+          <span class="btn-spinner" style="display:none">⏳</span>
+        </button>
+      </div>
+
+      <!-- Processing Status -->
+      <div class="processing-status" id="processingStatus" style="display:none">
+        <div class="status-header">
+          <span class="status-icon" id="statusIcon">⚙️</span>
+          <div>
+            <div class="status-title" id="statusTitle">Processing…</div>
+            <div class="status-msg" id="statusMsg"></div>
+          </div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div class="tech-tags" id="techTags"></div>
+      </div>
+    </section>
+
+    <!-- Projects List -->
+    <section class="projects-section" id="projectsSection">
+      <h2 class="section-title">📋 Previous Projects</h2>
+      <div class="projects-grid" id="projectsGrid">
+        <div class="empty-state">No projects yet. Upload one above to get started.</div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast notifications -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Performance Report – AI Viva Simulator</title>
+  <link rel="stylesheet" href="/static/css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <a href="/" class="nav-back">← Dashboard</a>
+      <span class="nav-sep">|</span>
+      <span class="nav-title">Performance Report</span>
+    </div>
+  </nav>
+
+  <main class="report-container">
+
+    <!-- Score Hero -->
+    <section class="report-hero card">
+      <div class="report-score-block">
+        <div class="big-score" id="bigScore">—</div>
+        <div class="grade-badge" id="gradeBadge">—</div>
+      </div>
+      <div class="report-meta">
+        <h2 id="reportTitle">Performance Report</h2>
+        <p id="execSummary" class="exec-summary"></p>
+        <div class="report-stats-row">
+          <div class="stat-pill">
+            <span class="stat-pill-num" id="reportQuestions">—</span>
+            <span class="stat-pill-label">Questions</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-num" id="reportCorrect">—</span>
+            <span class="stat-pill-label">Correct</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-num" id="reportPartial">—</span>
+            <span class="stat-pill-label">Partial</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-num" id="reportIncorrect">—</span>
+            <span class="stat-pill-label">Incorrect</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="report-grid">
+
+      <!-- Topic Performance -->
+      <div class="card report-card">
+        <h3 class="card-title">📈 Topic Performance</h3>
+        <div id="topicPerformance" class="topic-list"></div>
+      </div>
+
+      <!-- Strong Areas -->
+      <div class="card report-card">
+        <h3 class="card-title">💪 Strengths</h3>
+        <ul id="strongAreas" class="report-list success-list"></ul>
+      </div>
+
+      <!-- Weak Areas -->
+      <div class="card report-card">
+        <h3 class="card-title">⚠️ Areas for Improvement</h3>
+        <ul id="weakAreas" class="report-list error-list"></ul>
+      </div>
+
+      <!-- Misconceptions -->
+      <div class="card report-card">
+        <h3 class="card-title">🔁 Repeated Misconceptions</h3>
+        <ul id="misconceptions" class="report-list warn-list"></ul>
+      </div>
+
+      <!-- Revision Topics -->
+      <div class="card report-card">
+        <h3 class="card-title">📖 Recommended Revision</h3>
+        <ul id="revisionTopics" class="report-list info-list"></ul>
+      </div>
+
+      <!-- Practice Questions -->
+      <div class="card report-card full-width">
+        <h3 class="card-title">🧪 Practice Questions</h3>
+        <div id="practiceQuestions" class="practice-questions-list"></div>
+      </div>
+
+      <!-- Examiner Comments -->
+      <div class="card report-card full-width">
+        <h3 class="card-title">🎓 Examiner's Comments</h3>
+        <div class="examiner-comment" id="examinerComment"></div>
+      </div>
+
+      <!-- Question Review -->
+      <div class="card report-card full-width">
+        <h3 class="card-title">📝 Question-by-Question Review</h3>
+        <div id="questionReview" class="question-review-list"></div>
+      </div>
+    </div>
+
+    <div class="report-actions">
+      <a href="/" class="btn btn-secondary">🏠 Back to Dashboard</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Print Report</button>
+    </div>
+  </main>
+
+  <div class="toast-container" id="toastContainer"></div>
+  <script>
+    window.SESSION_ID = {{ session_id }};
+  </script>
+  <script src="/static/js/report.js"></script>
+</body>
+</html>

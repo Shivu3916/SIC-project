@@ -1,0 +1,137 @@
+# Smart Library Management System – Project Documentation
+
+## 1. Project Overview
+
+The Smart Library Management System (SLMS) is a full-stack web application designed to automate library operations including book cataloguing, member management, borrowing/returning workflows, and fine calculation. It replaces the legacy paper-based system.
+
+## 2. Architecture
+
+The application follows a three-tier architecture:
+- **Presentation Layer**: React.js frontend with responsive design
+- **Business Logic Layer**: Flask REST API with JWT authentication
+- **Data Layer**: PostgreSQL database with SQLAlchemy ORM
+
+### Architecture Decisions
+We selected a REST architecture over GraphQL because the client queries follow predictable patterns and REST caching via HTTP headers is straightforward. GraphQL would add unnecessary complexity.
+
+## 3. Technology Stack
+
+| Technology | Purpose | Why Selected |
+|---|---|---|
+| Python 3.11 | Backend language | Team expertise, rich ecosystem |
+| Flask | Web framework | Lightweight, flexible, easier to learn than Django |
+| PostgreSQL | Primary database | ACID compliance, advanced indexing, JSON support |
+| SQLAlchemy | ORM | Pythonic interface, migration support via Alembic |
+| React | Frontend | Component reusability, large community |
+| Redis | Session caching | Sub-millisecond latency for session lookups |
+| JWT | Authentication | Stateless, scales horizontally without shared session state |
+| Docker | Containerisation | Reproducible builds, easy deployment |
+
+## 4. Database Design
+
+### Core Tables
+
+**books** (isbn, title, author, genre, quantity, available_quantity, added_at)
+**members** (id, name, email, membership_type, joined_at, expiry_date)
+**loans** (id, book_isbn, member_id, borrowed_at, due_date, returned_at, fine_amount)
+**reservations** (id, book_isbn, member_id, reserved_at, status)
+
+### Indexing Strategy
+- Composite index on (member_id, returned_at) in loans table for fast overdue queries
+- Full-text index on (title, author) using PostgreSQL's tsvector for book search
+- B-tree index on isbn for O(log n) lookups
+
+### Normalisation
+The schema is in 3NF. We deliberately denormalised the fine_amount field in loans (instead of computing it on-the-fly) to avoid recalculating fines on every read, trading storage space for query speed.
+
+## 5. Key Algorithms
+
+### Fine Calculation
+```
+fine = max(0, (current_date - due_date).days) * DAILY_RATE
+```
+- Daily rate: ₹2 per day
+- Maximum fine cap: ₹200
+- Time complexity: O(1) per loan
+- Fine is computed and stored when a book is returned
+
+### Book Recommendation Engine
+Uses collaborative filtering based on borrowing history:
+1. Build a user-book matrix (sparse matrix using scipy.sparse)
+2. Compute cosine similarity between users
+3. Recommend books borrowed by similar users but not yet by the current user
+- Time complexity: O(u²) for similarity matrix, O(u * b) for recommendations where u = users, b = books
+
+### Search Algorithm
+Full-text search using PostgreSQL tsvector:
+- Tokenisation and stemming handled by PostgreSQL
+- Ranked results using ts_rank
+- Fallback to ILIKE for partial matches
+
+## 6. Security Implementation
+
+- **Authentication**: JWT tokens with 15-minute access tokens and 7-day refresh tokens
+- **Password hashing**: bcrypt with work factor 12
+- **SQL injection prevention**: SQLAlchemy parameterised queries; raw SQL is never constructed from user input
+- **Rate limiting**: Flask-Limiter (100 requests/minute per IP for unauthenticated endpoints)
+- **Input validation**: Pydantic schemas validate all incoming JSON
+- **CORS**: Restricted to the frontend domain only
+- **File uploads**: Restricted to PDF/JPEG, validated by magic bytes (not just extension)
+
+## 7. API Design
+
+RESTful API with the following endpoints:
+
+- GET /api/books – List books with pagination (limit/offset)
+- POST /api/books – Add new book (librarian only)
+- GET /api/books/{isbn} – Get book details
+- POST /api/loans – Borrow a book
+- PUT /api/loans/{id}/return – Return a book
+- GET /api/members/{id}/loans – Member loan history
+- GET /api/reports/overdue – List overdue loans (librarian)
+
+Pagination uses cursor-based approach for the overdue report (large result sets) and offset-based for general book listings (predictable page sizes).
+
+## 8. Testing Strategy
+
+- **Unit tests**: pytest for business logic (fine calculation, recommendation algorithm)
+- **Integration tests**: TestClient for API endpoints with an in-memory SQLite database
+- **End-to-end tests**: Playwright for critical user journeys (borrow → return → fine paid)
+- **Code coverage**: 84% statement coverage
+- **Load testing**: Locust simulated 500 concurrent users; P95 response time < 200ms
+
+## 9. Performance Optimisations
+
+1. **N+1 query elimination**: SQLAlchemy eager loading (joinedload) for member-loan relationships
+2. **Connection pooling**: SQLAlchemy pool size 10, max overflow 20
+3. **Redis caching**: Popular book queries cached for 5 minutes
+4. **Lazy loading**: Book cover images loaded on-demand via lazy attribute
+5. **Database query optimisation**: EXPLAIN ANALYZE used to verify index usage for all queries handling > 1000 rows
+
+## 10. Scalability Considerations
+
+- **Horizontal scaling**: Stateless Flask app; multiple instances behind Nginx load balancer
+- **Database read replicas**: Read-heavy queries (book listings, search) routed to replicas
+- **Async task queue**: Celery + Redis for email notifications (due date reminders) to avoid blocking request threads
+- **Bottleneck**: The recommendation engine currently runs synchronously; for > 10,000 users, pre-compute recommendations nightly as a Celery task
+
+## 11. Limitations and Known Issues
+
+1. **Recommendation cold start**: New members receive popularity-based recommendations until they have ≥ 3 borrowings
+2. **Concurrency**: Last-item race condition — two members can borrow the last copy simultaneously (mitigated with database-level optimistic locking)
+3. **Search**: Full-text search does not handle misspellings; a future improvement would integrate Elasticsearch with fuzzy matching
+4. **Fine cap**: The ₹200 cap was a business decision; it creates perverse incentives for long-overdue books
+
+## 12. Deployment
+
+- Docker Compose for local development (Flask + PostgreSQL + Redis)
+- Production: AWS ECS Fargate (3 tasks), RDS PostgreSQL (db.t3.medium), ElastiCache Redis
+- CI/CD: GitHub Actions runs tests on every PR; deploys to ECS on merge to main
+- Monitoring: AWS CloudWatch + Sentry for error tracking
+
+## 13. Future Enhancements
+
+- Mobile app (React Native) using the same REST API
+- RFID integration for automated book check-in/check-out
+- Inter-library loan system
+- Machine learning: NLP-based book summarisation for catalogue enrichment
